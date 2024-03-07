@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BL.Abstractions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,6 +10,8 @@ public static class DbRegistrationExt
     public static IServiceCollection AddDbContext(this IServiceCollection serviceCollection,
         IConfiguration configuration)
     {
+        serviceCollection.AddScoped<ICardRepository, CardRepository>();
+        serviceCollection.AddScoped<IParticipantRepository, ParticipantRepository>();
         return serviceCollection.AddDbContext<AppDbContext>(builder =>
         {
             builder.UseNpgsql(configuration["Database:ConnectionString"]);

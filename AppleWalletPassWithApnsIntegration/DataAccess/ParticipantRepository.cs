@@ -1,12 +1,19 @@
-﻿using BL.Entities;
+﻿using BL.Abstractions;
+using BL.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess;
 
-public class ParticipantRepository(AppDbContext appDbContext)
+public class ParticipantRepository(AppDbContext appDbContext) : IParticipantRepository
 {
-    public async Task<List<Participant>> GetAllParticipants()
+
+    public Task<Participant> GetParticipantByCard(Card card)
     {
-        return await appDbContext.Participants.ToListAsync();
+        throw new NotImplementedException();
+    }
+
+    public Task<Participant> AddParticipant(Participant participant)
+    {
+        throw new NotImplementedException();
     }
 }

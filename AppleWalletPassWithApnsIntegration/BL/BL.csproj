@@ -7,14 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Abstractions\" />
-      <Folder Include="Dtos\" />
-      <Folder Include="Services\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <PackageReference Include="Azure.Storage.Blobs" Version="12.20.0-beta.1" />
       <PackageReference Include="dotnet-passbook" Version="3.2.4" />
+      <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
     </ItemGroup>
 
 </Project>
