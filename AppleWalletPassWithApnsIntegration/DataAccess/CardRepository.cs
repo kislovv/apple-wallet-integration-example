@@ -1,12 +1,14 @@
 ﻿using BL.Abstractions;
 using BL.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess;
 
-public class CardRepository: ICardRepository
+public class CardRepository(AppDbContext dbContext) : ICardRepository
 {
-    public Task<Card> GetCardByUserHashId(string userHashId)
+    public async Task<Card> GetCardByUserHashId(string userHashId)
     {
-        throw new NotImplementedException();
+        return await dbContext.Cards
+            .SingleAsync(c => c.UserHashId == userHashId);
     }
 }

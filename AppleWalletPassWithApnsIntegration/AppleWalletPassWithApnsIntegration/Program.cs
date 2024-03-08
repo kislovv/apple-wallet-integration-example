@@ -17,7 +17,7 @@ builder.Services.AddScoped<IPassService, AppleWalletPassService>();
 
 var app = builder.Build();
 
-app.MapPost("/pass/create", async (IPassService passService,PassRequest passRequest) =>
+app.MapPost("/pass/create", async (IPassService passService, PassRequest passRequest) =>
 {
 //TODO: Добавить automapper    
 var result = await passService.CreatePass(new PassDto

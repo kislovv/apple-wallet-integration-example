@@ -1,6 +1,4 @@
-﻿using System.Security.AccessControl;
-
-namespace BL.Entities;
+﻿namespace BL.Entities;
 
 public class Partner
 {

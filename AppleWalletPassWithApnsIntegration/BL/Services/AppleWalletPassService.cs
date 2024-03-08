@@ -63,7 +63,7 @@ public class AppleWalletPassService(
             request.LogoText = "Интенс APP";
             request.Style = PassStyle.StoreCard;
             request.AssociatedStoreIdentifiers = [1398198275];
-            request.AddBarcode(BarcodeType.PKBarcodeFormatQR, "01927847623423234234", "ISO-8859-1");
+            request.AddBarcode(BarcodeType.PKBarcodeFormatQR, passDto.UserHashId, "ISO-8859-1");
 
             //TODO: Добавить конфиг для подставления узла из ngrok 
             request.WebServiceUrl = "";
