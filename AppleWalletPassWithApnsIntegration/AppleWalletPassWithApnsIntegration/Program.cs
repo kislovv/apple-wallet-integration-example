@@ -1,4 +1,6 @@
+using AppleWalletPassWithApnsIntegration.Configurations;
 using AppleWalletPassWithApnsIntegration.Models;
+using AutoMapper;
 using BL.Abstractions;
 using BL.Configurations;
 using BL.Dtos;
@@ -14,19 +16,19 @@ builder.Configuration
 builder.Services.AddDbContext(builder.Configuration);
 builder.Services.Configure<AppleWalletPassConfig>(builder.Configuration.GetSection("appleWalletConfigurations"));
 builder.Services.AddScoped<IPassService, AppleWalletPassService>();
+builder.Services.AddAutoMapper(expression =>
+{
+    expression.AddProfile<ApiRequestMapperProfile>();
+});
 
 var app = builder.Build();
 
-app.MapPost("/pass/create", async (IPassService passService, PassRequest passRequest) =>
+app.MapPost("/pass/create", async (IPassService passService, IMapper mapper, PassRequest passRequest) =>
 {
-//TODO: Добавить automapper    
-var result = await passService.CreatePass(new PassDto
-{
-    UserHashId = passRequest.UserHashId
-});
-
-//TODO: Подумать над названием файла (возможно id или имя participant + pass)
-return Results.File(result, "application/vnd.apple.pkpasses", "tickets.pkpass");
+    var result = await passService.CreatePass(mapper.Map<PassDto>(passRequest));
+    
+    //TODO: Подумать над названием файла (возможно id или имя participant + pass)
+    return Results.File(result, "application/vnd.apple.pkpasses", "tickets.pkpass");
 });
 
 app.Run();

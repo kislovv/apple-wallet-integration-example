@@ -7,4 +7,5 @@ public class AppleWalletPassConfig
     public string PassbookCertificateBase64 { get; set; }
     public string PassbookPassword { get; set; }
     public string TeamIdentifier { get; set; }
+    public string OrganizationName { get; set; }
 }

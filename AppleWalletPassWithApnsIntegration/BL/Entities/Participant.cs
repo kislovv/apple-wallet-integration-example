@@ -6,5 +6,5 @@ public class Participant : User
     public decimal Balance { get; set; }
     
     public long CardId { get; set; }
-    public Card Card { get; set; }
+    public Card? Card { get; set; }
 }

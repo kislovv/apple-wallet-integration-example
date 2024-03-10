@@ -2,14 +2,16 @@
 using BL.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess;
+namespace DataAccess.Repositories;
 
 public class ParticipantRepository(AppDbContext appDbContext) : IParticipantRepository
 {
 
-    public Task<Participant> GetParticipantByCard(Card card)
+    public async Task<Participant> GetParticipantByCard(Card card)
     {
-        throw new NotImplementedException();
+        return await appDbContext.Participants
+            .Include(p=> p.Card)
+            .SingleAsync(p => p.Card.Id == card.Id);
     }
 
     public Task<Participant> AddParticipant(Participant participant)

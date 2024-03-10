@@ -3,6 +3,7 @@ using Azure.Storage.Blobs;
 using BL.Abstractions;
 using BL.Configurations;
 using BL.Dtos;
+using BL.Exceptions;
 using Microsoft.Extensions.Options;
 using Passbook.Generator;
 using Passbook.Generator.Fields;
@@ -11,18 +12,22 @@ namespace BL.Services;
 
 public class AppleWalletPassService(
     IOptionsMonitor<AppleWalletPassConfig> appleWalletConfigOptions,
-    ICardRepository cardRepository,
-    IParticipantRepository participantRepository)
+    ICardRepository cardRepository)
     : IPassService
 {
     private readonly AppleWalletPassConfig _appleWalletPassConfig = appleWalletConfigOptions.CurrentValue;
-    private readonly ICardRepository _cardRepository = cardRepository;
-    private readonly IParticipantRepository _participantRepository = participantRepository;
 
     public async Task<byte[]> CreatePass(PassDto passDto)
     {
-            var generator = new PassGenerator();
+            var card = await cardRepository.GetCardWithPartnerAndPassSpecificByUserHashId(passDto.UserHashId);
+            if (card.Partner.PartnerSpecific is null)
+            {
+                    throw new BusinessException("{NF} Not found Partner or Partner Specific!");
+            }
 
+            var partnerPassSpecific = card.Partner.PartnerSpecific;
+            var generator = new PassGenerator();
+            
             var blobContainerClient = new BlobServiceClient(
                             new Uri(""))
                     .GetBlobContainerClient("images");
@@ -37,47 +42,41 @@ public class AppleWalletPassService(
                             Convert.FromBase64String(_appleWalletPassConfig.PassbookCertificateBase64),
                             _appleWalletPassConfig.PassbookPassword, flags)
             };
-            request.Images.Add(PassbookImage.Strip, await GetFile("Intens.png", blobContainerClient));
-
-            //TODO: Вставить данные с PartnerSpecific
-            var icon = await GetFile("Intens APP Icon 1x.png", blobContainerClient);
-            var icon2X = await GetFile("Intens APP Icon 2x.png", blobContainerClient);
-            var icon3X = await GetFile("Intens APP Icon 3x.png", blobContainerClient);
+            
+            var icon = await GetFile(partnerPassSpecific.IconPath, blobContainerClient);
+            var logo = await GetFile(partnerPassSpecific.LogoPath, blobContainerClient);
+            var strip = await GetFile(partnerPassSpecific.StripPath, blobContainerClient);
 
             request.Images.Add(PassbookImage.Icon, icon);
-            request.Images.Add(PassbookImage.Logo, icon);
-            request.Images.Add(PassbookImage.Logo2X, icon2X);
-            request.Images.Add(PassbookImage.Logo3X, icon3X);
-            request.Images.Add(PassbookImage.Icon2X, icon2X);
-            request.Images.Add(PassbookImage.Icon3X, icon3X);
+            request.Images.Add(PassbookImage.Logo, logo);
+            request.Images.Add(PassbookImage.Logo2X, logo);
+            request.Images.Add(PassbookImage.Logo3X, logo);
+            request.Images.Add(PassbookImage.Icon2X, icon);
+            request.Images.Add(PassbookImage.Icon3X, icon);
+            request.Images.Add(PassbookImage.Strip, strip);
 
             //TODO: Вставить данные с PartnerSpecific
             request.PassTypeIdentifier = _appleWalletPassConfig.PassTypeIdentifier;
-            request.BackgroundColor = "#5bd1e1";
-            request.LabelColor = "#000000";
+            request.BackgroundColor = partnerPassSpecific.BackgroundColor;
             request.TeamIdentifier = _appleWalletPassConfig.TeamIdentifier;
             request.SerialNumber = Guid.NewGuid().ToString();
             request.SuppressStripShine = false;
-            request.Description = "Интенс APP";
-            request.OrganizationName = "DLS, OOO";
-            request.LogoText = "Интенс APP";
+            request.Description = partnerPassSpecific.Description;
+            request.OrganizationName = _appleWalletPassConfig.OrganizationName;
+            request.LogoText = _appleWalletPassConfig.OrganizationName;
             request.Style = PassStyle.StoreCard;
-            request.AssociatedStoreIdentifiers = [1398198275];
+            request.AssociatedStoreIdentifiers = partnerPassSpecific.AssociatedStoreApps.Select(app => app.Id).ToList();
+            
             request.AddBarcode(BarcodeType.PKBarcodeFormatQR, passDto.UserHashId, "ISO-8859-1");
+            
+            request.SecondaryFields.Add(new NumberField("balance", "Скидка", card.Participant.Balance,
+                    FieldNumberStyle.PKNumberStyleDecimal));
+            request.TransitType = TransitType.PKTransitTypeGeneric;
 
             //TODO: Добавить конфиг для подставления узла из ngrok 
             request.WebServiceUrl = "";
             //TODO: Продумать Токен для подтверждения
             request.AuthenticationToken = "";
-
-            //TODO: Вставить данные из баланса Participant
-            request.SecondaryFields.Add(new NumberField("balance", "Скидка", 0.6m,
-                    FieldNumberStyle.PKNumberStyleDecimal));
-
-            //TODO: подумать, может такой параметр можно где то хранить, мало ли будут разные вариации pass (a.k.a константы для отдельных partners)
-            //или через enumtypeconverter в бд прям хранить доп параметром
-            request.TransitType = TransitType.PKTransitTypeGeneric;
-
 
             return generator.Generate(request);
     }
