@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240307080928_Initial")]
-    partial class Initial
+    [Migration("20240311061642_Seed_PartnerSpecific")]
+    partial class Seed_PartnerSpecific
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -125,6 +125,14 @@ namespace DataAccess.Migrations
                         .HasName("pk_partners");
 
                     b.ToTable("partners", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Name = "Лукоил",
+                            PartnerSpecificId = 0L
+                        });
                 });
 
             modelBuilder.Entity("BL.Entities.PartnerSpecific", b =>
@@ -173,6 +181,18 @@ namespace DataAccess.Migrations
                         .HasDatabaseName("ix_partner_specifics_partner_id");
 
                     b.ToTable("partner_specifics", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            BackgroundColor = "#5bd1e1",
+                            Description = "Интенс APP",
+                            IconPath = "Intens APP Icon 1x.png",
+                            LogoPath = "Intens APP Icon 1x.png",
+                            PartnerId = 1L,
+                            StripPath = "Intens.png"
+                        });
                 });
 
             modelBuilder.Entity("BL.Entities.Pass", b =>
@@ -250,7 +270,7 @@ namespace DataAccess.Migrations
 
                     b.Property<decimal>("Balance")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("numeric(, 2)")
+                        .HasColumnType("numeric(2)")
                         .HasDefaultValue(0.00m)
                         .HasColumnName("balance");
 
@@ -360,8 +380,7 @@ namespace DataAccess.Migrations
                 {
                     b.Navigation("Cards");
 
-                    b.Navigation("PartnerSpecific")
-                        .IsRequired();
+                    b.Navigation("PartnerSpecific");
                 });
 
             modelBuilder.Entity("BL.Entities.PartnerSpecific", b =>
@@ -371,8 +390,7 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("BL.Entities.Participant", b =>
                 {
-                    b.Navigation("Card")
-                        .IsRequired();
+                    b.Navigation("Card");
                 });
 #pragma warning restore 612, 618
         }

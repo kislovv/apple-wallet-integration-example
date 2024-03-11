@@ -14,6 +14,7 @@ public static class DbRegistrationExt
         serviceCollection.AddScoped<ICardRepository, CardRepository>();
         serviceCollection.AddScoped<IParticipantRepository, ParticipantRepository>();
         serviceCollection.AddScoped<IPartnerRepository, PartnerRepository>();
+        
         return serviceCollection.AddDbContext<AppDbContext>(builder =>
         {
             builder.UseNpgsql(configuration["Database:ConnectionString"]);

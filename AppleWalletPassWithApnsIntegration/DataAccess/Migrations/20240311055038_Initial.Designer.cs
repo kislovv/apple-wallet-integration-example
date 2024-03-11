@@ -2,6 +2,7 @@
 using DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240311055038_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,14 +49,6 @@ namespace DataAccess.Migrations
                         .HasDatabaseName("ix_associated_store_apps_partner_specific_id");
 
                     b.ToTable("associated_store_apps", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1L,
-                            Name = "Интенс APP",
-                            PartnerSpecificId = 1L
-                        });
                 });
 
             modelBuilder.Entity("BL.Entities.Card", b =>
@@ -130,14 +125,6 @@ namespace DataAccess.Migrations
                         .HasName("pk_partners");
 
                     b.ToTable("partners", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1L,
-                            Name = "Лукоил",
-                            PartnerSpecificId = 0L
-                        });
                 });
 
             modelBuilder.Entity("BL.Entities.PartnerSpecific", b =>
@@ -186,18 +173,6 @@ namespace DataAccess.Migrations
                         .HasDatabaseName("ix_partner_specifics_partner_id");
 
                     b.ToTable("partner_specifics", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1L,
-                            BackgroundColor = "#5bd1e1",
-                            Description = "Интенс APP",
-                            IconPath = "Intens APP Icon 1x.png",
-                            LogoPath = "Intens APP Icon 1x.png",
-                            PartnerId = 1L,
-                            StripPath = "Intens.png"
-                        });
                 });
 
             modelBuilder.Entity("BL.Entities.Pass", b =>

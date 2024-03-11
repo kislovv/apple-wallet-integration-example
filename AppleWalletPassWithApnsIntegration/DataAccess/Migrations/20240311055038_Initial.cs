@@ -81,7 +81,7 @@ namespace DataAccess.Migrations
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
-                    balance = table.Column<decimal>(type: "numeric(2)", nullable: false, defaultValue: 0.00m),
+                    balance = table.Column<decimal>(type: "numeric(2,0)", nullable: false, defaultValue: 0.00m),
                     card_id = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>

@@ -18,7 +18,7 @@ public class AppleWalletPassService(
     private readonly AppleWalletPassConfig _appleWalletPassConfig = appleWalletConfigOptions.CurrentValue;
 
     public async Task<byte[]> CreatePass(PassDto passDto)
-    {
+    { 
             var card = await cardRepository.GetCardWithPartnerAndPassSpecificByUserHashId(passDto.UserHashId);
             if (card.Partner.PartnerSpecific is null)
             {

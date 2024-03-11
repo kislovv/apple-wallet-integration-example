@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240310162424_SeedPartnerSpecific")]
-    partial class SeedPartnerSpecific
+    [Migration("20240311061516_Seed_Partner")]
+    partial class Seed_Partner
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -125,6 +125,14 @@ namespace DataAccess.Migrations
                         .HasName("pk_partners");
 
                     b.ToTable("partners", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Name = "Лукоил",
+                            PartnerSpecificId = 0L
+                        });
                 });
 
             modelBuilder.Entity("BL.Entities.PartnerSpecific", b =>
