@@ -8,4 +8,6 @@ public class AppleWalletPassConfig
     public string PassbookPassword { get; set; }
     public string TeamIdentifier { get; set; }
     public string OrganizationName { get; set; }
+    public string WebServiceUrl { get; set; }
+    public string InstanceApiKey { get; set; }
 }

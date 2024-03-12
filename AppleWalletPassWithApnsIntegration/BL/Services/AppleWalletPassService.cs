@@ -1,5 +1,4 @@
 ﻿using System.Security.Cryptography.X509Certificates;
-using Azure.Storage.Blobs;
 using BL.Abstractions;
 using BL.Configurations;
 using BL.Dtos;
@@ -12,7 +11,7 @@ namespace BL.Services;
 
 public class AppleWalletPassService(
     IOptionsMonitor<AppleWalletPassConfig> appleWalletConfigOptions,
-    ICardRepository cardRepository)
+    ICardRepository cardRepository, IFileProvider fileProvider)
     : IPassService
 {
     private readonly AppleWalletPassConfig _appleWalletPassConfig = appleWalletConfigOptions.CurrentValue;
@@ -28,12 +27,7 @@ public class AppleWalletPassService(
             var partnerPassSpecific = card.Partner.PartnerSpecific;
             var generator = new PassGenerator();
             
-            var blobContainerClient = new BlobServiceClient(
-                            new Uri(""))
-                    .GetBlobContainerClient("images");
-
             const X509KeyStorageFlags flags = X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable;
-
             var request = new PassGeneratorRequest
             {
                     AppleWWDRCACertificate = new X509Certificate2(
@@ -43,9 +37,9 @@ public class AppleWalletPassService(
                             _appleWalletPassConfig.PassbookPassword, flags)
             };
             
-            var icon = await GetFile(partnerPassSpecific.IconPath, blobContainerClient);
-            var logo = await GetFile(partnerPassSpecific.LogoPath, blobContainerClient);
-            var strip = await GetFile(partnerPassSpecific.StripPath, blobContainerClient);
+            var icon = await fileProvider.GetFileByPath(partnerPassSpecific.IconPath);
+            var logo = await fileProvider.GetFileByPath(partnerPassSpecific.LogoPath);
+            var strip = await fileProvider.GetFileByPath(partnerPassSpecific.StripPath);
 
             request.Images.Add(PassbookImage.Icon, icon);
             request.Images.Add(PassbookImage.Logo, logo);
@@ -54,11 +48,11 @@ public class AppleWalletPassService(
             request.Images.Add(PassbookImage.Icon2X, icon);
             request.Images.Add(PassbookImage.Icon3X, icon);
             request.Images.Add(PassbookImage.Strip, strip);
-
-            //TODO: Вставить данные с PartnerSpecific
+            
             request.PassTypeIdentifier = _appleWalletPassConfig.PassTypeIdentifier;
             request.BackgroundColor = partnerPassSpecific.BackgroundColor;
             request.TeamIdentifier = _appleWalletPassConfig.TeamIdentifier;
+            //TODO: подумать какой serial number использовать
             request.SerialNumber = Guid.NewGuid().ToString();
             request.SuppressStripShine = false;
             request.Description = partnerPassSpecific.Description;
@@ -74,25 +68,10 @@ public class AppleWalletPassService(
             request.TransitType = TransitType.PKTransitTypeGeneric;
 
             //TODO: Добавить конфиг для подставления узла из ngrok 
-            request.WebServiceUrl = "";
+            request.WebServiceUrl = _appleWalletPassConfig.WebServiceUrl;
             //TODO: Продумать Токен для подтверждения
             request.AuthenticationToken = "";
 
             return generator.Generate(request);
     }
-    
-    
-    //TODO: Вынести в метод сервиса и само подключение к blob ранилищу тоже вынести в отдельный сервис
-    async Task<byte[]> GetFile(string fileName, BlobContainerClient blobContainerClient)
-    {
-        var client = blobContainerClient.GetBlobClient(fileName);
-
-        var blobDownloadInfoResponse = await client.DownloadAsync();
-
-        using var memoryStream = new MemoryStream();
-        await blobDownloadInfoResponse.Value.Content.CopyToAsync(memoryStream);
-    
-        return memoryStream.ToArray();
-    }
-
 }

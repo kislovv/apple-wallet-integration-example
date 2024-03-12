@@ -1,9 +1,7 @@
 using AppleWalletPassWithApnsIntegration.Configurations;
-using AppleWalletPassWithApnsIntegration.Models;
-using AutoMapper;
+using AppleWalletPassWithApnsIntegration.Endpoints;
 using BL.Abstractions;
 using BL.Configurations;
-using BL.Dtos;
 using BL.Services;
 using DataAccess;
 
@@ -14,21 +12,27 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
 
 builder.Services.AddDbContext(builder.Configuration);
+
 builder.Services.Configure<AppleWalletPassConfig>(builder.Configuration.GetSection("appleWalletConfigurations"));
+builder.Services.Configure<FileProviderConfig>(builder.Configuration.GetSection("azureBlobStorage"));
+
 builder.Services.AddScoped<IPassService, AppleWalletPassService>();
+builder.Services.AddScoped<IFileProvider, AzureBlobFileProvider>();
+
 builder.Services.AddAutoMapper(expression =>
 {
     expression.AddProfile<ApiRequestMapperProfile>();
 });
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+//app
 var app = builder.Build();
 
-app.MapPost("/pass/create", async (IPassService passService, IMapper mapper, PassRequest passRequest) =>
-{
-    var result = await passService.CreatePass(mapper.Map<PassDto>(passRequest));
-    
-    //TODO: Подумать над названием файла (возможно id или имя participant + pass)
-    return Results.File(result, "application/vnd.apple.pkpasses", "tickets.pkpass");
-});
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.RegisterAppleWalletEndpoints();
 
 app.Run();
