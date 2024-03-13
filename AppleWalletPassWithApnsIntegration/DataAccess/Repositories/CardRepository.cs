@@ -20,4 +20,11 @@ public class CardRepository(AppDbContext dbContext) : ICardRepository
                 .ThenInclude(p=> p.PartnerSpecific)
             .SingleAsync(c => c.UserHashId == userHashId);
     }
+
+    public async Task<Card> UpdateCard(Card card)
+    {
+        dbContext.Cards.Update(card);
+        await dbContext.SaveChangesAsync();
+        return card;
+    }
 }

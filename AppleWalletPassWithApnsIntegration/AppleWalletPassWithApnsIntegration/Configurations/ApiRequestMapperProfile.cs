@@ -8,6 +8,9 @@ public class ApiRequestMapperProfile :Profile
 {
     public ApiRequestMapperProfile()
     {
-        CreateMap<PassRequest, PassDto>().ReverseMap();
+        CreateMap<PassRequest, PassDto>()
+            .ReverseMap()
+            .ForMember(request => request.DeviceName, opt => 
+                opt.MapFrom(dto =>dto.Device));
     }
 }

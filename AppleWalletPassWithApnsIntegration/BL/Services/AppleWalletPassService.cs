@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using BL.Abstractions;
 using BL.Configurations;
 using BL.Dtos;
@@ -6,6 +7,7 @@ using BL.Exceptions;
 using Microsoft.Extensions.Options;
 using Passbook.Generator;
 using Passbook.Generator.Fields;
+using Pass = BL.Entities.Pass;
 
 namespace BL.Services;
 
@@ -27,14 +29,16 @@ public class AppleWalletPassService(
             var partnerPassSpecific = card.Partner.PartnerSpecific;
             var generator = new PassGenerator();
             
-            const X509KeyStorageFlags flags = X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable;
+            const X509KeyStorageFlags flags = X509KeyStorageFlags.MachineKeySet | 
+                                              X509KeyStorageFlags.Exportable;
+            
             var request = new PassGeneratorRequest
             {
-                    AppleWWDRCACertificate = new X509Certificate2(
-                            Convert.FromBase64String(_appleWalletPassConfig.WWDRCertificateBase64)),
-                    PassbookCertificate = new X509Certificate2(
-                            Convert.FromBase64String(_appleWalletPassConfig.PassbookCertificateBase64),
-                            _appleWalletPassConfig.PassbookPassword, flags)
+                AppleWWDRCACertificate = new X509Certificate2(
+                    Convert.FromBase64String(_appleWalletPassConfig.WWDRCertificateBase64)),
+                PassbookCertificate = new X509Certificate2(
+                    Convert.FromBase64String(_appleWalletPassConfig.PassbookCertificateBase64),
+                    _appleWalletPassConfig.PassbookPassword, flags)
             };
             
             var icon = await fileProvider.GetFileByPath(partnerPassSpecific.IconPath);
@@ -52,8 +56,9 @@ public class AppleWalletPassService(
             request.PassTypeIdentifier = _appleWalletPassConfig.PassTypeIdentifier;
             request.BackgroundColor = partnerPassSpecific.BackgroundColor;
             request.TeamIdentifier = _appleWalletPassConfig.TeamIdentifier;
-            //TODO: подумать какой serial number использовать
-            request.SerialNumber = Guid.NewGuid().ToString();
+            var serialNumber = Convert.ToBase64String(
+                Encoding.UTF8.GetBytes($"{card.Participant.Id} {passDto.Device}"));
+            request.SerialNumber = serialNumber;
             request.SuppressStripShine = false;
             request.Description = partnerPassSpecific.Description;
             request.OrganizationName = _appleWalletPassConfig.OrganizationName;
@@ -66,11 +71,18 @@ public class AppleWalletPassService(
             request.SecondaryFields.Add(new NumberField("balance", "Скидка", card.Participant.Balance,
                     FieldNumberStyle.PKNumberStyleDecimal));
             request.TransitType = TransitType.PKTransitTypeGeneric;
-
-            //TODO: Добавить конфиг для подставления узла из ngrok 
+            
             request.WebServiceUrl = _appleWalletPassConfig.WebServiceUrl;
-            //TODO: Продумать Токен для подтверждения
-            request.AuthenticationToken = "";
+            request.AuthenticationToken = _appleWalletPassConfig.InstanceApiKey;
+
+            card.Pass = new Pass
+            {
+                CardId = card.Id,
+                LastUpdated = DateTimeOffset.Now,
+                PassId = serialNumber
+            };
+
+            await cardRepository.UpdateCard(card);
 
             return generator.Generate(request);
     }
