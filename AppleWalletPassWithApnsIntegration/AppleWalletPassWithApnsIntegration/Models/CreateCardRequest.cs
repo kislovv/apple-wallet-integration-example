@@ -1,6 +1,14 @@
-﻿namespace AppleWalletPassWithApnsIntegration.Models;
+﻿using System.ComponentModel.DataAnnotations;
 
+namespace AppleWalletPassWithApnsIntegration.Models;
+
+/// <summary>
+/// Запрос на создание карты
+/// </summary>
 public class CreateCardRequest
 {
-    public string CardId { get; set; }
+    /// <summary>
+    /// Идентификатор карты
+    /// </summary>
+    public long CardId { get; set; }
 }

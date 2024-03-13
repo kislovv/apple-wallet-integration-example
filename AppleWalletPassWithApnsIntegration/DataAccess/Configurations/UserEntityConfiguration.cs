@@ -11,6 +11,6 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(u => u.Id);
         builder.HasAlternateKey(u => u.Login);
         builder.Property(u => u.Login)
-            .HasMaxLength(50);
+            .HasMaxLength(UserMeta.MaxNameLength);
     }
 }

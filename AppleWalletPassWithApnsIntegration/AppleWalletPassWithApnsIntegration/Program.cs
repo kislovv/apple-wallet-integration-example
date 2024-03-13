@@ -1,3 +1,4 @@
+using System.Reflection;
 using AppleWalletPassWithApnsIntegration.Configurations;
 using AppleWalletPassWithApnsIntegration.Endpoints;
 using BL.Abstractions;
@@ -25,7 +26,11 @@ builder.Services.AddAutoMapper(expression =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+} );
 
 builder.Services.AddAuthentication().AddJwtBearer();
 builder.Services.AddAuthorization();
@@ -40,5 +45,4 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.RegisterAppleWalletEndpoints();
-
 app.Run();

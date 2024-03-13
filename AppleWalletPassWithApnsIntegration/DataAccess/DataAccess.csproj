@@ -27,4 +27,6 @@
       <ProjectReference Include="..\BL\BL.csproj" />
     </ItemGroup>
 
+    <Import Project="..\SharedMetas\SharedMetas.projitems" Label="Shared" />
+
 </Project>

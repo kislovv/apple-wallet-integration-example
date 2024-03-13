@@ -1,4 +1,5 @@
-﻿using BL.Configurations;
+﻿using AppleWalletPassWithApnsIntegration.Models;
+using BL.Configurations;
 using Microsoft.Extensions.Options;
 
 namespace AppleWalletPassWithApnsIntegration.Filters;
