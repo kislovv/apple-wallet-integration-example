@@ -8,8 +8,8 @@ public class CardEntityConfigurations : IEntityTypeConfiguration<Card>
 {
     public void Configure(EntityTypeBuilder<Card> builder)
     {
-        builder.HasOne<Pass>(c => c.Pass)
+        builder.HasOne<AppleWalletPass>(c => c.AppleWalletPass)
             .WithOne(p => p.Card)
-            .HasForeignKey<Pass>(p => p.CardId);
+            .HasForeignKey<AppleWalletPass>(p => p.CardId);
     }
 }

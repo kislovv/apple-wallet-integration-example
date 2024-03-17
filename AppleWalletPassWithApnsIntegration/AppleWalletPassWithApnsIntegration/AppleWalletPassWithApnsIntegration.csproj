@@ -13,10 +13,12 @@
       <PackageReference Include="Azure.Storage.Blobs" Version="12.20.0-beta.1" />
       <PackageReference Include="dotnet-passbook" Version="3.2.4" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.3" />
+      <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.3" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.2">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Microsoft.OpenApi" Version="1.6.14" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
       <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.5.0" />
       <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" />
@@ -26,5 +28,7 @@
     <ItemGroup>
       <ProjectReference Include="..\DataAccess\DataAccess.csproj" />
     </ItemGroup>
+
+    <Import Project="..\SharedMetas\SharedMetas.projitems" Label="Shared" />
 
 </Project>

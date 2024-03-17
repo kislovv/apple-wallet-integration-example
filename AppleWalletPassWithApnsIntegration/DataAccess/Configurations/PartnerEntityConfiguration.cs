@@ -8,8 +8,8 @@ public class PartnerEntityConfiguration: IEntityTypeConfiguration<Partner>
 {
     public void Configure(EntityTypeBuilder<Partner> builder)
     {
-        builder.HasOne<PartnerSpecific>(p => p.PartnerSpecific)
+        builder.HasOne<AppleWalletPartnerSpecific>(p => p.PartnerSpecific)
             .WithOne(specific => specific.Partner)
-            .HasForeignKey<PartnerSpecific>(specific => specific.PartnerId);
+            .HasForeignKey<AppleWalletPartnerSpecific>(specific => specific.PartnerId);
     }
 }

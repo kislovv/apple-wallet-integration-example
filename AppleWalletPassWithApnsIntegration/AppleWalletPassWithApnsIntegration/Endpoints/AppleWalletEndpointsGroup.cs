@@ -3,12 +3,13 @@ using AppleWalletPassWithApnsIntegration.Models;
 using AutoMapper;
 using BL.Abstractions;
 using BL.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppleWalletPassWithApnsIntegration.Endpoints;
 
-public static class AppleWalletEndpointsGroup
+internal static class AppleWalletEndpointsGroup
 {
     public static void RegisterAppleWalletEndpoints(this IEndpointRouteBuilder routes)
     {
@@ -16,7 +17,7 @@ public static class AppleWalletEndpointsGroup
 
         var appleWallet = apple.MapGroup("wallet").AddEndpointFilter<AppleWalletEndpointFilter>();
         
-        apple.MapPost("/passes/create", async (
+        apple.MapPost("/passes/create",[Authorize(Roles = "user")] async (
                 [FromServices]IPassService passService,
                 [FromServices] IMapper mapper, 
                 [FromBody] PassRequest passRequest) =>
@@ -26,11 +27,14 @@ public static class AppleWalletEndpointsGroup
             //TODO: Подумать над названием файла (возможно id или имя participant + pass)
             return Results.File(result, "application/vnd.apple.pkpasses", "tickets.pkpass");
         }).WithTags("Create apple pass")
-            .WithDescription("Создание apple wallet pass")
-            .Produces<FileContentHttpResult>(StatusCodes.Status201Created)
+            .Produces<FileContentHttpResult>(StatusCodes.Status201Created, "application/vnd.apple.pkpasses")
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status500InternalServerError)
-            .WithSummary("Метод создания pass при первичной регистрации");
+            .WithOpenApi(operation =>
+            {
+                operation.Description = "Создание apple wallet pass";
+                return operation;
+            });
 
         appleWallet.MapPost("/v1/devices/{deviceId}/registrations/{passTypeId}/{serialNumber}",
             async (
@@ -41,13 +45,13 @@ public static class AppleWalletEndpointsGroup
         {
             return Results.Created();
         });
-        
-        
+
+
         appleWallet.MapDelete("/v1/devices/{deviceId}/registrations/{passTypeId}/{serialNumber}",
             async (string deviceId, string passTypeId, string serialNumber) =>
         {
             return Results.Ok();
-        }).AddEndpointFilter<AppleWalletEndpointFilter>();
+        });
         
         appleWallet.MapGet("/v1/devices/{deviceId}/registrations/{passTypeId}",
             async (string deviceId, string passTypeId,

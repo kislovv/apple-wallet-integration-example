@@ -10,12 +10,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Participant> Participants => Set<Participant>();
     
     public DbSet<Card> Cards => Set<Card>();
-    public DbSet<Pass> Passes => Set<Pass>();
-    public DbSet<Device> Devices => Set<Device>();
+    public DbSet<AppleWalletPass> AppleWalletPasses => Set<AppleWalletPass>();
+    public DbSet<AppleDevice> AppleDevices => Set<AppleDevice>();
     
     public DbSet<Partner> Partners => Set<Partner>();
-    public DbSet<PartnerSpecific> PartnerSpecifics => Set<PartnerSpecific>();
-    public DbSet<AssociatedStoreApp> AssociatedStoreApps => Set<AssociatedStoreApp>();
+    public DbSet<AppleWalletPartnerSpecific> AppleWalletPartnerSpecifics => Set<AppleWalletPartnerSpecific>();
+    public DbSet<AppleAssociatedStoreApp> AppleAssociatedStoreApps => Set<AppleAssociatedStoreApp>();
 
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -24,6 +24,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.ApplyConfiguration(new ParticipantEntityConfiguration());
         modelBuilder.ApplyConfiguration(new CardEntityConfigurations());
         modelBuilder.ApplyConfiguration(new PartnerEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AppleWalletPassEntityConfiguration());
         
         SeedingStartedPartner(modelBuilder);
         SeedingStartedPartnerSpecific(modelBuilder);
@@ -45,7 +46,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     private void SeedingStartedPartnerSpecific(ModelBuilder modelBuilder)
     {
-        var partnerSpecific = new PartnerSpecific
+        var partnerSpecific = new AppleWalletPartnerSpecific
         {
             Id = 1,
             PartnerId = 1,
@@ -56,18 +57,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             Description = "Интенс APP"
         };
         
-        modelBuilder.Entity<PartnerSpecific>().HasData(partnerSpecific);
+        modelBuilder.Entity<AppleWalletPartnerSpecific>().HasData(partnerSpecific);
     }
     
     private void SeedingStartedAssociatedStoreApp(ModelBuilder modelBuilder)
     {
-        var appStore = new AssociatedStoreApp
+        var appStore = new AppleAssociatedStoreApp
         {
             Id = 1,
             Name = "Интенс APP",
-            PartnerSpecificId = 1
+            AppleWalletPartnerSpecificId = 1
         };
 
-        modelBuilder.Entity<AssociatedStoreApp>().HasData(appStore);
+        modelBuilder.Entity<AppleAssociatedStoreApp>().HasData(appStore);
     }
 }

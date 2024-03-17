@@ -7,5 +7,5 @@ public class Partner
     public List<Card> Cards { get; set; }
 
     public long PartnerSpecificId { get; set; }
-    public PartnerSpecific? PartnerSpecific { get; set; }
+    public AppleWalletPartnerSpecific? PartnerSpecific { get; set; }
 }

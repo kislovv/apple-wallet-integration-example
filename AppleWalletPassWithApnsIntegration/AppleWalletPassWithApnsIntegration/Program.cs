@@ -1,10 +1,14 @@
 using System.Reflection;
+using System.Text;
 using AppleWalletPassWithApnsIntegration.Configurations;
 using AppleWalletPassWithApnsIntegration.Endpoints;
 using BL.Abstractions;
 using BL.Configurations;
 using BL.Services;
 using DataAccess;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,13 +16,21 @@ builder.Configuration
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
 
+builder.WebHost.ConfigureKestrel(options =>
+{   
+    options.ConfigureEndpointDefaults(lo => lo.Protocols = HttpProtocols.Http2);
+});
+
 builder.Services.AddDbContext(builder.Configuration);
 
 builder.Services.Configure<AppleWalletPassConfig>(builder.Configuration.GetSection("appleWalletConfigurations"));
 builder.Services.Configure<FileProviderConfig>(builder.Configuration.GetSection("azureBlobStorage"));
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtAuth"));
 
 builder.Services.AddScoped<IPassService, AppleWalletPassService>();
 builder.Services.AddScoped<IFileProvider, AzureBlobFileProvider>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 
 builder.Services.AddAutoMapper(expression =>
 {
@@ -28,11 +40,52 @@ builder.Services.AddAutoMapper(expression =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = @"JWT Authorization header using the Bearer scheme. \r\n\r\n
+                      Enter 'Bearer' [space] and then your token in the text input below.
+                      \r\n\r\nExample: 'Bearer 12345abcdef'",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header,
+            },
+            new List<string>()
+        }
+    });
+    
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 } );
 
-builder.Services.AddAuthentication().AddJwtBearer();
+builder.Services.AddAuthentication()
+    .AddJwtBearer(options =>    
+    {    
+        options.TokenValidationParameters = new TokenValidationParameters    
+        {    
+            ValidateIssuer = true,    
+            ValidateAudience = true,    
+            ValidateLifetime = true,    
+            ValidateIssuerSigningKey = true,    
+            ValidIssuer = builder.Configuration["JwtAuth:Issuer"],    
+            ValidAudience = builder.Configuration["JwtAuth:Issuer"],    
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtAuth:Key"]!))    
+        };    
+    });
 builder.Services.AddAuthorization();
 
 //app
@@ -45,4 +98,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.RegisterAppleWalletEndpoints();
+app.RegisterUserEndpoints();
+
 app.Run();

@@ -13,5 +13,5 @@ public class Card
     public Partner Partner { get; set; }
 
     public string PassId { get; set; }
-    public Pass Pass { get; set; }
+    public AppleWalletPass AppleWalletPass { get; set; }
 }

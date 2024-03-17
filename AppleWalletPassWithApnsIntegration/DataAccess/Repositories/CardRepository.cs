@@ -21,10 +21,8 @@ public class CardRepository(AppDbContext dbContext) : ICardRepository
             .SingleAsync(c => c.UserHashId == userHashId);
     }
 
-    public async Task<Card> UpdateCard(Card card)
+    public void UpdateCard(Card card)
     {
         dbContext.Cards.Update(card);
-        await dbContext.SaveChangesAsync();
-        return card;
     }
 }

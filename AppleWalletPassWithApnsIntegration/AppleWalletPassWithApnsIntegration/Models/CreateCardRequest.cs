@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
+
 namespace AppleWalletPassWithApnsIntegration.Models;
 
 /// <summary>

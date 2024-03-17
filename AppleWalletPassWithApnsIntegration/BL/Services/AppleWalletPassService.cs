@@ -4,16 +4,19 @@ using BL.Abstractions;
 using BL.Configurations;
 using BL.Dtos;
 using BL.Exceptions;
+using BL.Entities;
 using Microsoft.Extensions.Options;
 using Passbook.Generator;
 using Passbook.Generator.Fields;
-using Pass = BL.Entities.Pass;
 
 namespace BL.Services;
 
 public class AppleWalletPassService(
     IOptionsMonitor<AppleWalletPassConfig> appleWalletConfigOptions,
-    ICardRepository cardRepository, IFileProvider fileProvider)
+    ICardRepository cardRepository, 
+    IFileProvider fileProvider, 
+    IPassRepository passRepository,
+    IUnitOfWork unitOfWork)
     : IPassService
 {
     private readonly AppleWalletPassConfig _appleWalletPassConfig = appleWalletConfigOptions.CurrentValue;
@@ -64,7 +67,7 @@ public class AppleWalletPassService(
             request.OrganizationName = _appleWalletPassConfig.OrganizationName;
             request.LogoText = _appleWalletPassConfig.OrganizationName;
             request.Style = PassStyle.StoreCard;
-            request.AssociatedStoreIdentifiers = partnerPassSpecific.AssociatedStoreApps.Select(app => app.Id).ToList();
+            request.AssociatedStoreIdentifiers = partnerPassSpecific.AppleAssociatedStoreApps.Select(app => app.Id).ToList();
             
             request.AddBarcode(BarcodeType.PKBarcodeFormatQR, passDto.UserHashId, "ISO-8859-1");
             
@@ -74,16 +77,20 @@ public class AppleWalletPassService(
             
             request.WebServiceUrl = _appleWalletPassConfig.WebServiceUrl;
             request.AuthenticationToken = _appleWalletPassConfig.InstanceApiKey;
-
-            card.Pass = new Pass
+            
+            var pass = await passRepository.CreatePass(new AppleWalletPass
             {
                 CardId = card.Id,
                 LastUpdated = DateTimeOffset.Now,
                 PassId = serialNumber
-            };
+            });
 
-            await cardRepository.UpdateCard(card);
-
+            card.AppleWalletPass = pass;
+            
+            cardRepository.UpdateCard(card);
+            
+            await unitOfWork.SaveChangesAsync();
+            
             return generator.Generate(request);
     }
 }

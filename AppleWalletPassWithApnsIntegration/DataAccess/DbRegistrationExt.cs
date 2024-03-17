@@ -14,6 +14,9 @@ public static class DbRegistrationExt
         serviceCollection.AddScoped<ICardRepository, CardRepository>();
         serviceCollection.AddScoped<IParticipantRepository, ParticipantRepository>();
         serviceCollection.AddScoped<IPartnerRepository, PartnerRepository>();
+        serviceCollection.AddScoped<IPassRepository, PassRepository>();
+        serviceCollection.AddScoped<IUserRepository, UserRepository>();
+        serviceCollection.AddScoped<IUnitOfWork, UnitOfWork>();
         
         return serviceCollection.AddDbContext<AppDbContext>(builder =>
         {
