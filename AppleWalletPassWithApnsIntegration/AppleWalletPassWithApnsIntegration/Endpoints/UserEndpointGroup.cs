@@ -1,4 +1,5 @@
 ﻿using AppleWalletPassWithApnsIntegration.Models;
+using AutoMapper;
 using BL.Abstractions;
 using BL.Entities;
 using BL.Services;
@@ -13,17 +14,10 @@ public static class UserEndpointGroup
         var userGroup = routes.MapGroup("user").WithTags("User methods");
 
         userGroup.MapPost("signup", async (UserRegistrationRequest request, 
-            [FromServices] IUserService userService) =>
+            [FromServices] IUserService userService, [FromServices] IMapper mapper) =>
         {
-            //TODO: AddMap
-            var createUser = new User
-            {
-                Login = request.Login,
-                Password = PasswordHasher.Hash(request.Password),
-                Role = "user"
-            };
-
-            var user = await userService.AddUser(createUser);
+            
+            _ = await userService.AddUser(mapper.Map<User>(request));
 
             return Results.Ok();
 
@@ -34,16 +28,12 @@ public static class UserEndpointGroup
         }).Produces(StatusCodes.Status200OK);
         
         userGroup.MapPost("signin", async (LoginRequest request, 
-            [FromServices] IUserService userService,[FromServices] IJwtUtils jwtUtils) =>
+            [FromServices] IUserService userService,
+                [FromServices] IJwtUtils jwtUtils, [FromServices] IMapper mapper) =>
         {
-            //TODO: AddMap
             try
             {
-                var user = await userService.LoginUser(new User
-                {
-                    Login = request.Login,
-                    Password = request.Password
-                });
+                var user = await userService.LoginUser(mapper.Map<User>(request));
                 
                 return Results.Ok(new LoginResponse
                 {
