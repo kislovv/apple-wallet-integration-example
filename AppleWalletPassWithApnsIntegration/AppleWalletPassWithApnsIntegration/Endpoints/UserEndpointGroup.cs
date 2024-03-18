@@ -24,6 +24,7 @@ public static class UserEndpointGroup
         }).AllowAnonymous().WithOpenApi(operation =>
         {
             operation.Description = "Регистрация пользователя";
+            operation.Summary = "Регистрация пользователя";
             return operation;
         }).Produces(StatusCodes.Status200OK);
         

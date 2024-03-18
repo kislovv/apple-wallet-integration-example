@@ -7,4 +7,5 @@ public interface ICardRepository
     Task<Card> GetCardByUserHashId(string userHashId);
     Task<Card> GetCardWithPartnerAndPassSpecificByUserHashId(string userHashId);
     void UpdateCard(Card card);
+    Task<Card> AddAsync(Card card);
 }

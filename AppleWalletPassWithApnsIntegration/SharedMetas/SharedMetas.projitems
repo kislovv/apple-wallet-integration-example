@@ -9,6 +9,7 @@
     <Import_RootNamespace>SharedMetas</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Roles.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UserMeta.cs" />
   </ItemGroup>
 </Project>

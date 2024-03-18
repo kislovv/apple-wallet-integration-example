@@ -13,16 +13,12 @@ public class ApiRequestMapperProfile :Profile
         CreateMap<PassRequest, PassDto>()
             .ReverseMap()
             .ForMember(request => request.DeviceName, opt => 
-                opt.MapFrom(dto =>dto.Device));
+                opt.MapFrom(dto => dto.Device));
 
         CreateMap<UserRegistrationRequest, User>(MemberList.Source)
-            .ForMember(user => user.Password, opt => 
-            {
-                opt.MapFrom(request => PasswordHasher.Hash(request.Password));
-            })
             .ForMember(user => user.Role, opt =>
             {
-                opt.MapFrom(request => "user");
+                opt.MapFrom(request => Roles.User);
             });
         CreateMap<LoginRequest, User>(MemberList.Source);
     }

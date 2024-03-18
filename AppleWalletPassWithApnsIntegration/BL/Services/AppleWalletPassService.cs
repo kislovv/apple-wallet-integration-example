@@ -60,7 +60,7 @@ public class AppleWalletPassService(
             request.BackgroundColor = partnerPassSpecific.BackgroundColor;
             request.TeamIdentifier = _appleWalletPassConfig.TeamIdentifier;
             var serialNumber = Convert.ToBase64String(
-                Encoding.UTF8.GetBytes($"{card.Participant.Id} {passDto.Device}"));
+                Encoding.UTF8.GetBytes($"{card.Participant.Id}_{passDto.Device}"));
             request.SerialNumber = serialNumber;
             request.SuppressStripShine = false;
             request.Description = partnerPassSpecific.Description;
@@ -84,10 +84,6 @@ public class AppleWalletPassService(
                 LastUpdated = DateTimeOffset.Now,
                 PassId = serialNumber
             });
-
-            card.AppleWalletPass = pass;
-            
-            cardRepository.UpdateCard(card);
             
             await unitOfWork.SaveChangesAsync();
             

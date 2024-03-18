@@ -17,7 +17,7 @@ internal static class AppleWalletEndpointsGroup
 
         var appleWallet = apple.MapGroup("wallet").AddEndpointFilter<AppleWalletEndpointFilter>();
         
-        apple.MapPost("/passes/create",[Authorize(Roles = "user")] async (
+        apple.MapPost("/passes/create",[Authorize(Roles = Roles.User)] async (
                 [FromServices]IPassService passService,
                 [FromServices] IMapper mapper, 
                 [FromBody] PassRequest passRequest) =>

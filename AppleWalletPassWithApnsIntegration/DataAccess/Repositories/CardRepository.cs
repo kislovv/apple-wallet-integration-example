@@ -25,4 +25,11 @@ public class CardRepository(AppDbContext dbContext) : ICardRepository
     {
         dbContext.Cards.Update(card);
     }
+
+    public async Task<Card> AddAsync(Card card)
+    {
+        var result = await dbContext.Cards.AddAsync(card);
+
+        return result.Entity;
+    }
 }

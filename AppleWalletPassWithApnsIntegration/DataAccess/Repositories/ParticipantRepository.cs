@@ -14,8 +14,10 @@ public class ParticipantRepository(AppDbContext appDbContext) : IParticipantRepo
             .SingleAsync(p => p.Card.Id == card.Id);
     }
 
-    public Task<Participant> AddParticipant(Participant participant)
+    public async Task<Participant> AddParticipant(Participant participant)
     {
-        throw new NotImplementedException();
+        var result = await appDbContext.Participants.AddAsync(participant);
+        
+        return result.Entity;
     }
 }

@@ -8,6 +8,8 @@ public class UserService(IUserRepository userRepository, IUnitOfWork unitOfWork)
 {
     public async Task<User> AddUser(User user)
     {
+        user.Password = PasswordHasher.Hash(user.Password);
+        
         var result = await userRepository.Add(user);
         await unitOfWork.SaveChangesAsync();
 

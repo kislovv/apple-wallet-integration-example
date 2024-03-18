@@ -1,4 +1,7 @@
-﻿namespace AppleWalletPassWithApnsIntegration.Endpoints;
+﻿using AppleWalletPassWithApnsIntegration.Models;
+using Microsoft.AspNetCore.Authorization;
+
+namespace AppleWalletPassWithApnsIntegration.Endpoints;
 
 public static class CardsEndpointsGroup
 {
@@ -6,6 +9,9 @@ public static class CardsEndpointsGroup
     {
         var cards = routes.MapGroup("Cards");
 
-        cards.MapPost("add", () => { });
+        cards.MapPost("add", [Authorize](CreateCardRequest request, HttpContent context) =>
+        {
+            
+        });
     }
 }
