@@ -9,7 +9,14 @@ namespace AppleWalletPassWithApnsIntegration.Models;
 public class CreateCardRequest
 {
     /// <summary>
-    /// Идентификатор карты
+    /// Хеш карты
     /// </summary>
-    public long CardId { get; set; }
+    public string UserHashId { get; set; }
+    
+    /// <summary>
+    /// Идентификатор партнера привязанный к карте
+    /// </summary>
+    public long PartnerId { get; set; }
+    
+    
 }

@@ -11,7 +11,15 @@ public class ParticipantRepository(AppDbContext appDbContext) : IParticipantRepo
     {
         return await appDbContext.Participants
             .Include(p=> p.Card)
-            .SingleAsync(p => p.Card.Id == card.Id);
+            .SingleAsync(p => p.CardId == card.Id);
+    }
+
+    public Task<Participant> GetParticipantByUserId(long userId)
+    {
+        var participant = appDbContext.Participants
+            .SingleAsync(p => p.Id == userId);
+        
+        return participant;
     }
 
     public async Task<Participant> AddParticipant(Participant participant)

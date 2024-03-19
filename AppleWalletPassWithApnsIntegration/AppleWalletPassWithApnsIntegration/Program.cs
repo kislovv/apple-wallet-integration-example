@@ -31,6 +31,7 @@ builder.Services.AddScoped<IPassService, AppleWalletPassService>();
 builder.Services.AddScoped<IFileProvider, AzureBlobFileProvider>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
+builder.Services.AddScoped<ICardService, CardService>();
 
 builder.Services.AddAutoMapper(expression =>
 {
@@ -101,5 +102,6 @@ app.UseAuthorization();
 
 app.RegisterAppleWalletEndpoints();
 app.RegisterUserEndpoints();
+app.RegisterCardsEndpoints();
 
 app.Run();

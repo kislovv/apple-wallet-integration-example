@@ -81,7 +81,7 @@ public class AppleWalletPassService(
             var pass = await passRepository.CreatePass(new AppleWalletPass
             {
                 CardId = card.Id,
-                LastUpdated = DateTimeOffset.Now,
+                LastUpdated = DateTimeOffset.Now.ToUniversalTime(),
                 PassId = serialNumber
             });
             

@@ -12,6 +12,11 @@ public class UserRepository(AppDbContext appDbContext): IUserRepository
         return result.Entity;
     }
 
+    public Task<bool> IsExistWithLogin(string login)
+    {
+        return appDbContext.Users.AnyAsync(user => user.Login == login);
+    }
+
     public Task<User?> GetByLogin(string login)
     {
         return appDbContext.Users.SingleOrDefaultAsync(user => user.Login == login);

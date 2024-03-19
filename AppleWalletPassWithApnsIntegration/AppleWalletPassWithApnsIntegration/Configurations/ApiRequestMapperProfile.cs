@@ -21,5 +21,6 @@ public class ApiRequestMapperProfile :Profile
                 opt.MapFrom(request => Roles.User);
             });
         CreateMap<LoginRequest, User>(MemberList.Source);
+        CreateMap<CreateCardRequest, CardDto>(MemberList.Source);
     }
 }

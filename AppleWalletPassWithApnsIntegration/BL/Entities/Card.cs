@@ -12,6 +12,6 @@ public class Card
     public long PartnerId { get; set; }
     public Partner Partner { get; set; }
 
-    public string PassId { get; set; }
-    public AppleWalletPass AppleWalletPass { get; set; }
+    public string? PassId { get; set; }
+    public AppleWalletPass? AppleWalletPass { get; set; }
 }

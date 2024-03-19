@@ -2,12 +2,11 @@
 using AutoMapper;
 using BL.Abstractions;
 using BL.Entities;
-using BL.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppleWalletPassWithApnsIntegration.Endpoints;
 
-public static class UserEndpointGroup
+internal static class UserEndpointGroup
 {
     public static void RegisterUserEndpoints(this IEndpointRouteBuilder routes)
     {
@@ -23,10 +22,25 @@ public static class UserEndpointGroup
 
         }).AllowAnonymous().WithOpenApi(operation =>
         {
-            operation.Description = "Регистрация пользователя";
             operation.Summary = "Регистрация пользователя";
             return operation;
         }).Produces(StatusCodes.Status200OK);
+        
+        
+        userGroup.MapPost("signup/participant", async (UserRegistrationRequest request, 
+            [FromServices] IUserService userService, [FromServices] IMapper mapper) =>
+        {
+            
+            _ = await userService.RegisterParticipant(mapper.Map<User>(request));
+
+            return Results.Ok();
+
+        }).AllowAnonymous().WithOpenApi(operation =>
+        {
+            operation.Summary = "Регистрация пользователя как участника";
+            return operation;
+        }).Produces(StatusCodes.Status200OK);
+        
         
         userGroup.MapPost("signin", async (LoginRequest request, 
             [FromServices] IUserService userService,
@@ -51,7 +65,7 @@ public static class UserEndpointGroup
         .AllowAnonymous()
         .WithOpenApi(operation =>
         {
-            operation.Description = "Аутентификация пользователя";
+            operation.Summary = "Аутентификация пользователя";
             return operation;
         })
         .Produces(StatusCodes.Status200OK);

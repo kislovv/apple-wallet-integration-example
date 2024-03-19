@@ -18,6 +18,7 @@ public class CardRepository(AppDbContext dbContext) : ICardRepository
             .Include(c => c.Participant)
             .Include(c => c.Partner)
                 .ThenInclude(p=> p.PartnerSpecific)
+                    .ThenInclude(ps =>  ps.AppleAssociatedStoreApps)
             .SingleAsync(c => c.UserHashId == userHashId);
     }
 

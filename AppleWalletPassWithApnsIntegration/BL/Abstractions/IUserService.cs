@@ -5,5 +5,6 @@ namespace BL.Abstractions;
 public interface IUserService
 {
     Task<User> AddUser(User user);
+    Task<User> RegisterParticipant(User user);
     Task<User> LoginUser(User user);
 }
