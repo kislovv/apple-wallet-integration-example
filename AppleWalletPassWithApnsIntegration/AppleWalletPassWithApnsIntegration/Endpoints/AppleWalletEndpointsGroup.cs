@@ -41,8 +41,15 @@ internal static class AppleWalletEndpointsGroup
                  string deviceId,
                  string passTypeId, 
                  string serialNumber,
-                [FromBody] RegistrationPassRequest request) =>
-        {
+                [FromBody] RegistrationPassRequest request, [FromServices] IPassService passService) =>
+            {
+                await passService.RegisterPass(new RegisteredPassDto
+                {
+                    PushToken = request.PushToken,
+                    passTypeId = passTypeId,
+                    DeviceId = deviceId,
+                    SerialNumber = serialNumber
+                });
             return Results.Created();
         });
 

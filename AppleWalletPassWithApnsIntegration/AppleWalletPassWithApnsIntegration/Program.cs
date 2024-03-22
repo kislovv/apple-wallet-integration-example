@@ -53,6 +53,36 @@ builder.Services.AddSwaggerGen(options =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
+    options.AddSecurityDefinition("ApplePass", new OpenApiSecurityScheme
+    {
+        Description = """
+                      ApplePass Authorization header using the Token scheme.
+                      Enter 'ApplePass' [space] and then your token in the text input below.
+                      Example: 'ApplePass 12345abcdef'
+                      """,
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "ApplePass"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "ApplePass"
+                },
+                Scheme = "oauth2",
+                Name = "ApplePass",
+                In = ParameterLocation.Header,
+            },
+            new List<string>()
+        }
+    });
+    
     options.AddSecurityRequirement(new OpenApiSecurityRequirement()
     {
         {

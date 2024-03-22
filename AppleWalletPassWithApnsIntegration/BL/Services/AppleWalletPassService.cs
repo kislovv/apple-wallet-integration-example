@@ -89,4 +89,19 @@ public class AppleWalletPassService(
             
             return generator.Generate(request);
     }
+
+    public async Task RegisterPass(RegisteredPassDto passDto)
+    {
+        var pass = await passRepository.GetPassBySerialNumber(passDto.SerialNumber);
+
+        pass.PushToken = passDto.PushToken;
+        pass.AppleDevices.Add(new AppleDevice
+        {
+            Id = passDto.DeviceId
+        });
+        
+        passRepository.UpdatePass(pass);
+
+        await unitOfWork.SaveChangesAsync();
+    }
 }
