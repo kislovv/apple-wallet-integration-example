@@ -37,40 +37,58 @@ internal static class AppleWalletEndpointsGroup
             });
 
         appleWallet.MapPost("/v1/devices/{deviceId}/registrations/{passTypeId}/{serialNumber}",
-            async (
-                 string deviceId,
-                 string passTypeId, 
-                 string serialNumber,
-                [FromBody] RegistrationPassRequest request, [FromServices] IPassService passService) =>
+        async (
+             string deviceId,
+             string passTypeId, 
+             string serialNumber,
+            [FromBody] RegistrationPassRequest request, [FromServices] IPassService passService) =>
+        {
+            await passService.RegisterPass(new RegisteredPassDto
             {
-                await passService.RegisterPass(new RegisteredPassDto
-                {
-                    PushToken = request.PushToken,
-                    passTypeId = passTypeId,
-                    DeviceId = deviceId,
-                    SerialNumber = serialNumber
-                });
+                PushToken = request.PushToken,
+                passTypeId = passTypeId,
+                DeviceId = deviceId,
+                SerialNumber = serialNumber
+            });
+            
             return Results.Created();
         });
 
 
         appleWallet.MapDelete("/v1/devices/{deviceId}/registrations/{passTypeId}/{serialNumber}",
-            async (string deviceId, string passTypeId, string serialNumber) =>
+            async (string deviceId, string passTypeId, string serialNumber,
+                [FromServices] IPassService passService) =>
         {
+            await passService.UnregisterPass(new UnregisterPassDto
+            {
+                passTypeId = passTypeId,
+                DeviceId = deviceId,
+                SerialNumber = serialNumber
+            });
+            
             return Results.Ok();
         });
         
         appleWallet.MapGet("/v1/devices/{deviceId}/registrations/{passTypeId}",
             async (string deviceId, string passTypeId,
-                [FromQuery] string passesUpdatedSince) =>
-        {
-            return Results.Ok(new ListLastUpdatedPassesResponse());
+                [FromQuery] DateTimeOffset passesUpdatedSince, 
+                [FromServices] IPassService passService) =>
+            {
+                var lastUpdated = await passService.GetLastUpdatedPasses(deviceId, passesUpdatedSince);
+                
+            return lastUpdated == null
+                ? Results.NoContent()
+                : Results.Ok(new ListLastUpdatedPassesResponse
+                    {
+                        SerialNumbers = lastUpdated.SerialNumbers,
+                        LastUpdated = lastUpdated.LastUpdated.UtcTicks
+                    });
         });
         
         
         appleWallet.MapGet("/v1/passes/{passTypeIdentifier}/{serialNumber}",
             async (string passTypeIdentifier, string serialNumber, 
-                [FromServices] IPassService passService,[FromServices] IMapper mapper) =>
+                [FromServices] IPassService passService, [FromServices] IMapper mapper) =>
             {
                 //TODO: Добавить метод update 
                 var result = await passService.CreatePass(mapper.Map<PassDto>(serialNumber));

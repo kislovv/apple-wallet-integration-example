@@ -6,6 +6,7 @@ using BL.Dtos;
 using BL.Exceptions;
 using BL.Entities;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Passbook.Generator;
 using Passbook.Generator.Fields;
 
@@ -103,5 +104,31 @@ public class AppleWalletPassService(
         passRepository.UpdatePass(pass);
 
         await unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task UnregisterPass(UnregisterPassDto passDto)
+    {
+        var pass = await passRepository.GetPassBySerialNumber(passDto.SerialNumber);
+        
+        passRepository.Delete(pass);
+
+        await unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<LastUpdatedPassesDto?> GetLastUpdatedPasses(string deviceId, DateTimeOffset updatedBefore)
+    {
+        var lastUpdatedPasses = await passRepository.GetLastUpdatedPassesByDeviceId(
+            deviceId, updatedBefore);
+
+        if (lastUpdatedPasses.IsNullOrEmpty())
+        {
+            return default;
+        }
+
+        return new LastUpdatedPassesDto
+        {
+            SerialNumbers = lastUpdatedPasses.Select(lu => lu.PassId).ToList(),
+            LastUpdated = lastUpdatedPasses[0].LastUpdated
+        };
     }
 }

@@ -18,6 +18,20 @@ public class PassRepository(AppDbContext appContext) : IPassRepository
         appContext.AppleWalletPasses.Update(appleWalletPass);
     }
 
+    public void Delete(AppleWalletPass appleWalletPass)
+    {
+        appContext.AppleWalletPasses.Remove(appleWalletPass);
+    }
+
+    public async Task<List<AppleWalletPass>> GetLastUpdatedPassesByDeviceId(string deviceId, DateTimeOffset updatedBefore)
+    {
+        var device = await appContext.AppleDevices
+            .Include(d => d.AppleWalletPasses)
+            .SingleAsync(d => d.Id == deviceId);
+        
+        return device.AppleWalletPasses.Where(p => p.LastUpdated < updatedBefore).ToList();
+    }
+
     public Task<AppleWalletPass> GetPassBySerialNumber(string serialNumber)
     {
         return appContext.AppleWalletPasses
