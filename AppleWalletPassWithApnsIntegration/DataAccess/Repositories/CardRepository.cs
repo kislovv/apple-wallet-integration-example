@@ -12,6 +12,14 @@ public class CardRepository(AppDbContext dbContext) : ICardRepository
             .SingleAsync(c => c.UserHashId == userHashId);
     }
 
+    public async Task<Card> GetCardWithPassAndParticipantById(long cardId)
+    {
+        return await dbContext.Cards
+            .Include(c => c.AppleWalletPass)
+            .Include(c => c.Participant)
+            .SingleAsync(c => c.Id == cardId);
+    }
+
     public async Task<Card> GetCardWithPartnerAndPassSpecificByUserHashId(string userHashId)
     {
         return await dbContext.Cards

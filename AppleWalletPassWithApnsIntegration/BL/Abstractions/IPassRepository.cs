@@ -9,4 +9,5 @@ public interface IPassRepository
     void Delete(AppleWalletPass appleWalletPass);
     Task<List<AppleWalletPass>> GetLastUpdatedPassesByDeviceId(string deviceId, DateTimeOffset updatedBefore);
     Task<AppleWalletPass> GetPassBySerialNumber(string serialNumber);
+    Task<AppleWalletPass> GetPassWithPartnerSpecificBySerialNumber(string serialNumber);
 }

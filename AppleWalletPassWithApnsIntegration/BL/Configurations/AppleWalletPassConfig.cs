@@ -10,4 +10,9 @@ public class AppleWalletPassConfig
     public string OrganizationName { get; set; }
     public string WebServiceUrl { get; set; }
     public string InstanceApiKey { get; set; }
+    public bool IsDevelopment { get; set; }
+    public string PushNotificationP8PrivateKeyId { get; set; } 
+    public string PushNotificationP8PrivateKey { get; set; }
+    public string ApplicationId { get; set; }
+    
 }

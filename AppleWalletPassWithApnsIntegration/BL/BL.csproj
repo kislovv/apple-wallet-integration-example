@@ -9,6 +9,7 @@
     <ItemGroup>
       <PackageReference Include="AutoMapper" Version="13.0.1" />
       <PackageReference Include="Azure.Storage.Blobs" Version="12.20.0-beta.1" />
+      <PackageReference Include="dotAPNS.AspNetCore" Version="2.2.2" />
       <PackageReference Include="dotnet-passbook" Version="3.2.4" />
       <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
       <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.1.2" />

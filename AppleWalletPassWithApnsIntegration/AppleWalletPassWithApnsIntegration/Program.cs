@@ -12,6 +12,8 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
+
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
@@ -32,6 +34,8 @@ builder.Services.AddScoped<IFileProvider, AzureBlobFileProvider>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 builder.Services.AddScoped<ICardService, CardService>();
+builder.Services.AddScoped(typeof(IPushService<>), typeof(ApplePushService));
+
 
 builder.Services.AddAutoMapper(expression =>
 {

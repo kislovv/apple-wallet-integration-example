@@ -38,4 +38,16 @@ public class PassRepository(AppDbContext appContext) : IPassRepository
             .Include(p => p.AppleDevices)
             .SingleAsync(p => p.PassId == serialNumber);
     }
+
+    public Task<AppleWalletPass> GetPassWithPartnerSpecificBySerialNumber(string serialNumber)
+    {
+        return appContext.AppleWalletPasses
+            .Include(p => p.AppleDevices)
+            .Include(p => p.Card)
+                .ThenInclude(c=> c.Participant)
+            .Include(p => p.Card)
+                .ThenInclude(c => c.Partner)
+                    .ThenInclude(pr => pr.PartnerSpecific)
+            .SingleAsync(p => p.PassId == serialNumber);
+    }
 }

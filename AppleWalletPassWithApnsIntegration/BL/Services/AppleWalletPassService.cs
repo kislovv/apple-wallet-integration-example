@@ -17,78 +17,75 @@ public class AppleWalletPassService(
     ICardRepository cardRepository, 
     IFileProvider fileProvider, 
     IPassRepository passRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IPushService<UpdateAppleWalletPassMessageDto> pushService)
     : IPassService
 {
     private readonly AppleWalletPassConfig _appleWalletPassConfig = appleWalletConfigOptions.CurrentValue;
 
     public async Task<byte[]> CreatePass(PassDto passDto)
-    { 
-            var card = await cardRepository.GetCardWithPartnerAndPassSpecificByUserHashId(passDto.UserHashId);
-            if (card.Partner.PartnerSpecific is null)
-            {
-                    throw new BusinessException("{NF} Not found Partner or Partner Specific!");
-            }
+    {
+        var userHashId = passDto.UserHashId;
+        var card = await cardRepository.GetCardWithPartnerAndPassSpecificByUserHashId(userHashId);
+        if (card.Partner.PartnerSpecific is null)
+        {
+                throw new BusinessException("{NF} Not found Partner or Partner Specific!");
+        }
 
-            var partnerPassSpecific = card.Partner.PartnerSpecific;
-            var generator = new PassGenerator();
-            
-            const X509KeyStorageFlags flags = X509KeyStorageFlags.MachineKeySet | 
-                                              X509KeyStorageFlags.Exportable;
-            
-            var request = new PassGeneratorRequest
-            {
-                AppleWWDRCACertificate = new X509Certificate2(
-                    Convert.FromBase64String(_appleWalletPassConfig.WWDRCertificateBase64)),
-                PassbookCertificate = new X509Certificate2(
-                    Convert.FromBase64String(_appleWalletPassConfig.PassbookCertificateBase64),
-                    _appleWalletPassConfig.PassbookPassword, flags)
-            };
-            
-            var icon = await fileProvider.GetFileByPath(partnerPassSpecific.IconPath);
-            var logo = await fileProvider.GetFileByPath(partnerPassSpecific.LogoPath);
-            var strip = await fileProvider.GetFileByPath(partnerPassSpecific.StripPath);
+        var partnerPassSpecific = card.Partner.PartnerSpecific;
+        var serialNumber = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{card.Participant.Id}_{passDto.Device}"));
+        var balance = card.Participant.Balance;
+        
+        
+        var result = await GeneratePass(partnerPassSpecific, serialNumber, userHashId, balance);
 
-            request.Images.Add(PassbookImage.Icon, icon);
-            request.Images.Add(PassbookImage.Logo, logo);
-            request.Images.Add(PassbookImage.Logo2X, logo);
-            request.Images.Add(PassbookImage.Logo3X, logo);
-            request.Images.Add(PassbookImage.Icon2X, icon);
-            request.Images.Add(PassbookImage.Icon3X, icon);
-            request.Images.Add(PassbookImage.Strip, strip);
-            
-            request.PassTypeIdentifier = _appleWalletPassConfig.PassTypeIdentifier;
-            request.BackgroundColor = partnerPassSpecific.BackgroundColor;
-            request.TeamIdentifier = _appleWalletPassConfig.TeamIdentifier;
-            var serialNumber = Convert.ToBase64String(
-                Encoding.UTF8.GetBytes($"{card.Participant.Id}_{passDto.Device}"));
-            request.SerialNumber = serialNumber;
-            request.SuppressStripShine = false;
-            request.Description = partnerPassSpecific.Description;
-            request.OrganizationName = _appleWalletPassConfig.OrganizationName;
-            request.LogoText = _appleWalletPassConfig.OrganizationName;
-            request.Style = PassStyle.StoreCard;
-            request.AssociatedStoreIdentifiers = partnerPassSpecific.AppleAssociatedStoreApps.Select(app => app.Id).ToList();
-            
-            request.AddBarcode(BarcodeType.PKBarcodeFormatQR, passDto.UserHashId, "ISO-8859-1");
-            
-            request.SecondaryFields.Add(new NumberField("balance", "Скидка", card.Participant.Balance,
-                    FieldNumberStyle.PKNumberStyleDecimal));
-            request.TransitType = TransitType.PKTransitTypeGeneric;
-            
-            request.WebServiceUrl = _appleWalletPassConfig.WebServiceUrl;
-            request.AuthenticationToken = _appleWalletPassConfig.InstanceApiKey;
-            
-            var pass = await passRepository.CreatePass(new AppleWalletPass
-            {
-                CardId = card.Id,
-                LastUpdated = DateTimeOffset.Now.ToUniversalTime(),
-                PassId = serialNumber
-            });
-            
-            await unitOfWork.SaveChangesAsync();
-            
-            return generator.Generate(request);
+        var pass = await passRepository.CreatePass(new AppleWalletPass
+        {
+            CardId = card.Id,
+            LastUpdated = DateTimeOffset.Now.ToUniversalTime(),
+            PassId = serialNumber
+        });
+        
+        await unitOfWork.SaveChangesAsync();
+
+        return result;
+    }
+    
+    public async Task<byte[]> GetUpdatedPass(string serialNumber)
+    {
+        var pass = await passRepository.GetPassWithPartnerSpecificBySerialNumber(serialNumber);
+        
+        var partnerPassSpecific = pass.Card.Partner.PartnerSpecific;
+
+        var result = await GeneratePass(
+            pass.Card.Partner.PartnerSpecific!,
+            serialNumber,
+            pass.Card.UserHashId,
+            pass.Card.Participant.Balance);
+
+        pass.LastUpdated = DateTimeOffset.Now.ToUniversalTime();
+        
+        passRepository.UpdatePass(pass);
+
+        await unitOfWork.SaveChangesAsync();
+        
+        return result;
+    }
+
+    public async Task UpdatePass(UpdatePassDto passMessageDto)
+    {
+        var card = await cardRepository.GetCardWithPassAndParticipantById(passMessageDto.CardId);
+
+        if (card.AppleWalletPass is null)
+        {
+            throw new BusinessException($"Not found apple pass by card with id {passMessageDto.CardId}");
+        }
+        
+        await pushService.PushMessage(new UpdateAppleWalletPassMessageDto
+        {
+            PushToken = card.AppleWalletPass.PushToken,
+            NewBalance = card.Participant.Balance
+        });
     }
 
     public async Task RegisterPass(RegisteredPassDto passDto)
@@ -130,5 +127,58 @@ public class AppleWalletPassService(
             SerialNumbers = lastUpdatedPasses.Select(lu => lu.PassId).ToList(),
             LastUpdated = lastUpdatedPasses[0].LastUpdated
         };
+    }
+    
+    private async Task<byte[]> GeneratePass(AppleWalletPartnerSpecific partnerPassSpecific, string serialNumber, string userHashId,
+        decimal balance)
+    {
+        var generator = new PassGenerator();
+        
+        const X509KeyStorageFlags flags = X509KeyStorageFlags.MachineKeySet | 
+                                          X509KeyStorageFlags.Exportable;
+        
+        var request = new PassGeneratorRequest
+        {
+            AppleWWDRCACertificate = new X509Certificate2(
+                Convert.FromBase64String(_appleWalletPassConfig.WWDRCertificateBase64)),
+            PassbookCertificate = new X509Certificate2(
+                Convert.FromBase64String(_appleWalletPassConfig.PassbookCertificateBase64),
+                _appleWalletPassConfig.PassbookPassword, flags)
+        };
+        
+        var icon = await fileProvider.GetFileByPath(partnerPassSpecific.IconPath);
+        var logo = await fileProvider.GetFileByPath(partnerPassSpecific.LogoPath);
+        var strip = await fileProvider.GetFileByPath(partnerPassSpecific.StripPath);
+
+        request.Images.Add(PassbookImage.Icon, icon);
+        request.Images.Add(PassbookImage.Logo, logo);
+        request.Images.Add(PassbookImage.Logo2X, logo);
+        request.Images.Add(PassbookImage.Logo3X, logo);
+        request.Images.Add(PassbookImage.Icon2X, icon);
+        request.Images.Add(PassbookImage.Icon3X, icon);
+        request.Images.Add(PassbookImage.Strip, strip);
+        
+        request.PassTypeIdentifier = _appleWalletPassConfig.PassTypeIdentifier;
+        request.BackgroundColor = partnerPassSpecific.BackgroundColor;
+        request.TeamIdentifier = _appleWalletPassConfig.TeamIdentifier;
+        request.SerialNumber = serialNumber;
+        request.SuppressStripShine = false;
+        request.Description = partnerPassSpecific.Description;
+        request.OrganizationName = _appleWalletPassConfig.OrganizationName;
+        request.LogoText = _appleWalletPassConfig.OrganizationName;
+        request.Style = PassStyle.StoreCard;
+        request.AssociatedStoreIdentifiers = partnerPassSpecific.AppleAssociatedStoreApps.Select(app => app.Id).ToList();
+        
+        request.AddBarcode(BarcodeType.PKBarcodeFormatQR, userHashId, "ISO-8859-1");
+        
+        request.SecondaryFields.Add(new NumberField("balance", "Скидка", balance,
+            FieldNumberStyle.PKNumberStyleDecimal));
+        request.TransitType = TransitType.PKTransitTypeGeneric;
+        
+        request.WebServiceUrl = _appleWalletPassConfig.WebServiceUrl;
+        request.AuthenticationToken = _appleWalletPassConfig.InstanceApiKey;
+        
+        var result = generator.Generate(request);
+        return result;
     }
 }

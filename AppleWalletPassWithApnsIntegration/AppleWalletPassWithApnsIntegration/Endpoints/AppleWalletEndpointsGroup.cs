@@ -26,15 +26,34 @@ internal static class AppleWalletEndpointsGroup
     
             //TODO: Подумать над названием файла (возможно id или имя participant + pass)
             return Results.File(result, "application/vnd.apple.pkpasses", "tickets.pkpass");
+            
         }).WithTags("Create apple pass")
-            .Produces<FileContentHttpResult>(StatusCodes.Status201Created, "application/vnd.apple.pkpasses")
-            .Produces(StatusCodes.Status400BadRequest)
-            .Produces(StatusCodes.Status500InternalServerError)
-            .WithOpenApi(operation =>
+        .Produces<FileContentHttpResult>(StatusCodes.Status201Created, "application/vnd.apple.pkpasses")
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status500InternalServerError)
+        .WithOpenApi(operation =>
+        {
+            operation.Description = "Создание apple wallet pass";
+            return operation;
+        });
+        
+        apple.MapPut("/passes/update",[Authorize(Roles = Roles.User)] async (
+                [FromServices]IPassService passService, [FromServices] IMapper mapper, 
+                [FromBody] UpdatePassRequest passRequest, HttpContext context) =>
+        {
+            await passService.UpdatePass(new UpdatePassDto
             {
-                operation.Description = "Создание apple wallet pass";
-                return operation;
+                CardId = passRequest.CardId
             });
+            
+        }).WithTags("Update apple pass")
+        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status500InternalServerError)
+        .WithOpenApi(operation =>
+        {
+            operation.Description = "Запрос на обновление apple pass. Отправляется push на APN сервер Apple и лишь затем обновление pass";
+            return operation;
+        });
 
         appleWallet.MapPost("/v1/devices/{deviceId}/registrations/{passTypeId}/{serialNumber}",
         async (
@@ -69,33 +88,31 @@ internal static class AppleWalletEndpointsGroup
             return Results.Ok();
         });
         
-        appleWallet.MapGet("/v1/devices/{deviceId}/registrations/{passTypeId}",
-            async (string deviceId, string passTypeId,
-                [FromQuery] DateTimeOffset passesUpdatedSince, 
+        appleWallet.MapGet("/v1/devices/{deviceId}/registrations/{passTypeId}", 
+            async (string deviceId, string passTypeId, [FromQuery] DateTimeOffset passesUpdatedSince, 
                 [FromServices] IPassService passService) =>
+        {
+            var lastUpdated = await passService.GetLastUpdatedPasses(deviceId, passesUpdatedSince);
+            
+        return lastUpdated == null
+            ? Results.NoContent()
+            : Results.Ok(new ListLastUpdatedPassesResponse
             {
-                var lastUpdated = await passService.GetLastUpdatedPasses(deviceId, passesUpdatedSince);
-                
-            return lastUpdated == null
-                ? Results.NoContent()
-                : Results.Ok(new ListLastUpdatedPassesResponse
-                    {
-                        SerialNumbers = lastUpdated.SerialNumbers,
-                        LastUpdated = lastUpdated.LastUpdated.UtcTicks
-                    });
+                SerialNumbers = lastUpdated.SerialNumbers,
+                LastUpdated = lastUpdated.LastUpdated.UtcTicks
+            });
         });
         
         
         appleWallet.MapGet("/v1/passes/{passTypeIdentifier}/{serialNumber}",
             async (string passTypeIdentifier, string serialNumber, 
-                [FromServices] IPassService passService, [FromServices] IMapper mapper) =>
-            {
-                //TODO: Добавить метод update 
-                var result = await passService.CreatePass(mapper.Map<PassDto>(serialNumber));
-    
-                //TODO: Подумать над названием файла (возможно id или имя participant + pass)
-                return Results.File(result, "application/vnd.apple.pkpasses", "tickets.pkpass");
-            });
+                [FromServices] IPassService passService) =>
+        {
+            var result = await passService.GetUpdatedPass(serialNumber);
+
+            //TODO: Подумать над названием файла (возможно id или имя participant + pass)
+            return Results.File(result, "application/vnd.apple.pkpasses", "tickets.pkpass");
+        });
 
         appleWallet.WithTags("Apple Wallet");
     }
