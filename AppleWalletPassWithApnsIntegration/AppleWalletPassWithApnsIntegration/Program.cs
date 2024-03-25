@@ -6,6 +6,7 @@ using BL.Abstractions;
 using BL.Configurations;
 using BL.Services;
 using DataAccess;
+using dotAPNS.AspNetCore;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -28,6 +29,7 @@ builder.Services.AddDbContext(builder.Configuration);
 builder.Services.Configure<AppleWalletPassConfig>(builder.Configuration.GetSection("appleWalletConfigurations"));
 builder.Services.Configure<FileProviderConfig>(builder.Configuration.GetSection("azureBlobStorage"));
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtAuth"));
+builder.Services.AddApns();
 
 builder.Services.AddScoped<IPassService, AppleWalletPassService>();
 builder.Services.AddScoped<IFileProvider, AzureBlobFileProvider>();
