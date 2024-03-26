@@ -17,11 +17,16 @@ public static class DbRegistrationExt
         serviceCollection.AddScoped<IPassRepository, PassRepository>();
         serviceCollection.AddScoped<IUserRepository, UserRepository>();
         serviceCollection.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        var connectionString = configuration["Database:ConnectionString"];
         
         return serviceCollection.AddDbContext<AppDbContext>(builder =>
         {
-            builder.UseNpgsql(configuration["Database:ConnectionString"]);
+            builder.UseNpgsql(connectionString);
             builder.UseSnakeCaseNamingConvention();
         });
+        
+        
+        
     }
 }

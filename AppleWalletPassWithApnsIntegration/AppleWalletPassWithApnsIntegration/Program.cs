@@ -8,6 +8,7 @@ using BL.Dtos;
 using BL.Services;
 using DataAccess;
 using dotAPNS.AspNetCore;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -26,6 +27,13 @@ builder.WebHost.ConfigureKestrel(options =>
     options.ConfigureEndpointDefaults(lo => lo.Protocols = HttpProtocols.Http2);
 });
 */
+
+builder.Logging.AddSeq();
+builder.Services.AddHttpLogging(o =>
+{
+    o.LoggingFields = HttpLoggingFields.All;
+});
+
 builder.Services.AddDbContext(builder.Configuration);
 
 builder.Services.Configure<AppleWalletPassConfig>(builder.Configuration.GetSection("appleWalletConfigurations"));
@@ -137,6 +145,7 @@ app.UseSwaggerUI();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseHttpLogging();
 
 app.RegisterAppleWalletEndpoints();
 app.RegisterUserEndpoints();
