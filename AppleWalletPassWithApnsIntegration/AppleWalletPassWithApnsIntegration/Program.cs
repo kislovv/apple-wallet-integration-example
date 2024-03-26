@@ -4,6 +4,7 @@ using AppleWalletPassWithApnsIntegration.Configurations;
 using AppleWalletPassWithApnsIntegration.Endpoints;
 using BL.Abstractions;
 using BL.Configurations;
+using BL.Dtos;
 using BL.Services;
 using DataAccess;
 using dotAPNS.AspNetCore;
@@ -19,11 +20,12 @@ builder.Configuration
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
 
+/*
 builder.WebHost.ConfigureKestrel(options =>
 {   
     options.ConfigureEndpointDefaults(lo => lo.Protocols = HttpProtocols.Http2);
 });
-
+*/
 builder.Services.AddDbContext(builder.Configuration);
 
 builder.Services.Configure<AppleWalletPassConfig>(builder.Configuration.GetSection("appleWalletConfigurations"));
@@ -36,7 +38,7 @@ builder.Services.AddScoped<IFileProvider, AzureBlobFileProvider>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 builder.Services.AddScoped<ICardService, CardService>();
-builder.Services.AddScoped(typeof(IPushService<>), typeof(ApplePushService));
+builder.Services.AddScoped(typeof(IPushService<UpdateAppleWalletPassMessageDto>), typeof(ApplePushService));
 
 
 builder.Services.AddAutoMapper(expression =>

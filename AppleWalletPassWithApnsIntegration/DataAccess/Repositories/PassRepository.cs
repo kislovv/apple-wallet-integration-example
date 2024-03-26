@@ -32,11 +32,11 @@ public class PassRepository(AppDbContext appContext) : IPassRepository
         return device.AppleWalletPasses.Where(p => p.LastUpdated < updatedBefore).ToList();
     }
 
-    public Task<AppleWalletPass> GetPassBySerialNumber(string serialNumber)
+    public Task<AppleWalletPass?> GetPassBySerialNumber(string serialNumber)
     {
         return appContext.AppleWalletPasses
             .Include(p => p.AppleDevices)
-            .SingleAsync(p => p.PassId == serialNumber);
+            .SingleOrDefaultAsync(p => p.PassId == serialNumber);
     }
 
     public Task<AppleWalletPass> GetPassWithPartnerSpecificBySerialNumber(string serialNumber)

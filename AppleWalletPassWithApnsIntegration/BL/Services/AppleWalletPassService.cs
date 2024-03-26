@@ -39,15 +39,22 @@ public class AppleWalletPassService(
         
         var result = await GeneratePass(partnerPassSpecific, serialNumber, userHashId, balance);
 
-        var pass = await passRepository.CreatePass(new AppleWalletPass
+        var pass = await passRepository.GetPassBySerialNumber(serialNumber);
+        if (pass is null)
         {
-            CardId = card.Id,
-            LastUpdated = DateTimeOffset.Now.ToUniversalTime(),
-            PassId = serialNumber
-        });
-        
+            _ = await passRepository.CreatePass(new AppleWalletPass
+            {
+                CardId = card.Id,
+                LastUpdated = DateTimeOffset.Now.ToUniversalTime(),
+                PassId = serialNumber
+            });
+        }
+        else
+        {
+            pass.LastUpdated = DateTimeOffset.Now.ToUniversalTime();
+            passRepository.UpdatePass(pass);
+        }
         await unitOfWork.SaveChangesAsync();
-
         return result;
     }
     
