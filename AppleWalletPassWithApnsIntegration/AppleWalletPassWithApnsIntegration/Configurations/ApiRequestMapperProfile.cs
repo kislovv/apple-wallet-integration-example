@@ -12,8 +12,7 @@ public class ApiRequestMapperProfile :Profile
     /// <inheritdoc />
     public ApiRequestMapperProfile()
     {
-        CreateMap<PassRequest, PassDto>().ForMember(dto => dto.Device, opt => 
-                opt.MapFrom(request => request.DeviceName));
+        CreateMap<PassRequest, PassDto>();
 
         CreateMap<UserRegistrationRequest, User>(MemberList.Source)
             .ForMember(user => user.Role, opt =>

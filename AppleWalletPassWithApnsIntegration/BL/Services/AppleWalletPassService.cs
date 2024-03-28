@@ -18,6 +18,7 @@ public class AppleWalletPassService(
     IFileProvider fileProvider, 
     IPassRepository passRepository,
     IUnitOfWork unitOfWork,
+    IDevicesRepository devicesRepository,
     IPushService<UpdateAppleWalletPassMessageDto> pushService)
     : IPassService
 {
@@ -33,15 +34,15 @@ public class AppleWalletPassService(
         }
 
         var partnerPassSpecific = card.Partner.PartnerSpecific;
-        var serialNumber = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{card.Participant.Id}_{passDto.Device}"));
+        var serialNumber = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{card.Participant.Id}"));
         var balance = card.Participant.Balance;
         
         
         var result = await GeneratePass(partnerPassSpecific, serialNumber, userHashId, balance);
-
         var pass = await passRepository.GetPassBySerialNumber(serialNumber);
         if (pass is null)
         {
+            
             _ = await passRepository.CreatePass(new AppleWalletPass
             {
                 CardId = card.Id,
@@ -90,7 +91,7 @@ public class AppleWalletPassService(
         
         await pushService.PushMessage(new UpdateAppleWalletPassMessageDto
         {
-            PushToken = card.AppleWalletPass.PushToken,
+            PushToken = card.AppleWalletPass.PushToken!,
             NewBalance = card.Participant.Balance
         });
     }

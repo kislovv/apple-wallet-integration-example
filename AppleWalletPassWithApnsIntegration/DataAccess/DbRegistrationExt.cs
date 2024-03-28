@@ -16,6 +16,7 @@ public static class DbRegistrationExt
         serviceCollection.AddScoped<IPartnerRepository, PartnerRepository>();
         serviceCollection.AddScoped<IPassRepository, PassRepository>();
         serviceCollection.AddScoped<IUserRepository, UserRepository>();
+        serviceCollection.AddScoped<IDevicesRepository, DeviceRepository>();
         serviceCollection.AddScoped<IUnitOfWork, UnitOfWork>();
 
         var connectionString = configuration["Database:ConnectionString"];

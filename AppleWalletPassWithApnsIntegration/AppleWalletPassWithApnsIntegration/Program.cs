@@ -35,6 +35,7 @@ builder.Services.AddHttpLogging(o =>
 });
 
 builder.Services.AddDbContext(builder.Configuration);
+builder.Services.AddCors();
 
 builder.Services.Configure<AppleWalletPassConfig>(builder.Configuration.GetSection("appleWalletConfigurations"));
 builder.Services.Configure<FileProviderConfig>(builder.Configuration.GetSection("azureBlobStorage"));
@@ -140,8 +141,10 @@ builder.Services.AddAuthorization();
 //app
 var app = builder.Build();
 
+app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 app.UseSwagger();
 app.UseSwaggerUI();
+
 
 app.UseAuthentication();
 app.UseAuthorization();

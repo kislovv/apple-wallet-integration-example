@@ -4,7 +4,6 @@ using AutoMapper;
 using BL.Abstractions;
 using BL.Dtos;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppleWalletPassWithApnsIntegration.Endpoints;
@@ -28,7 +27,7 @@ internal static class AppleWalletEndpointsGroup
             return Results.File(result, "application/vnd.apple.pkpasses", "tickets.pkpass");
             
         }).WithTags("Create apple pass")
-        .Produces<FileContentHttpResult>(StatusCodes.Status201Created, "application/vnd.apple.pkpasses")
+        .Produces<FileResult>(StatusCodes.Status201Created, "application/vnd.apple.pkpasses")
         .Produces(StatusCodes.Status400BadRequest)
         .Produces(StatusCodes.Status500InternalServerError)
         .WithOpenApi(operation =>
@@ -89,10 +88,10 @@ internal static class AppleWalletEndpointsGroup
         });
         
         appleWallet.MapGet("/v1/devices/{deviceId}/registrations/{passTypeId}", 
-            async (string deviceId, string passTypeId, [FromQuery] DateTimeOffset passesUpdatedSince, 
+            async (string deviceId, string passTypeId, [FromQuery] string passesUpdatedSince, 
                 [FromServices] IPassService passService) =>
         {
-            var lastUpdated = await passService.GetLastUpdatedPasses(deviceId, passesUpdatedSince);
+            var lastUpdated = await passService.GetLastUpdatedPasses(deviceId, DateTimeOffset.Parse(passesUpdatedSince));
             
         return lastUpdated == null
             ? Results.NoContent()

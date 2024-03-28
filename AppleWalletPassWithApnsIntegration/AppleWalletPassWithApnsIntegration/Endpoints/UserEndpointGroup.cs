@@ -11,7 +11,6 @@ internal static class UserEndpointGroup
     public static void RegisterUserEndpoints(this IEndpointRouteBuilder routes)
     {
         var userGroup = routes.MapGroup("user").WithTags("User methods");
-
         userGroup.MapPost("signup", async (UserRegistrationRequest request, 
             [FromServices] IUserService userService, [FromServices] IMapper mapper) =>
         {
@@ -59,6 +58,7 @@ internal static class UserEndpointGroup
             //TODO: Add logging
             catch(Exception ex)
             {
+                
                 return Results.Unauthorized();
             }
         })
