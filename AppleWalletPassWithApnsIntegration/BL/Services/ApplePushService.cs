@@ -15,26 +15,30 @@ public class ApplePushService(IOptionsMonitor<AppleWalletPassConfig> appleWallet
 
     public async Task PushMessage(UpdateAppleWalletPassMessageDto passMessageDto)
     {
-        var applePush = new ApplePush(ApplePushType.Background)
-            .AddCustomProperty("balance", passMessageDto.NewBalance)
-            .AddToken(passMessageDto.PushToken);
-        
-        if (_appleWalletPassConfig.IsDevelopment)
+        var pushes = passMessageDto.DevicesPushToken.Select(deviceToken =>
         {
-            applePush.SendToDevelopmentServer();
-        }
+            var push = new ApplePush(ApplePushType.Background)
+                .AddCustomProperty("balance", passMessageDto.NewBalance)
+                .AddToken(deviceToken);
+            if (_appleWalletPassConfig.IsDevelopment)
+            {
+                push.SendToDevelopmentServer();
+            }
+            return push;
+            
+        }).ToArray();
         
-        var apnsResponse = await apnsService.SendPush(applePush, new ApnsJwtOptions
+        var apnsResponses = await apnsService.SendPushes(pushes, new ApnsJwtOptions
         {
-            BundleId = _appleWalletPassConfig.ApplicationId,
+            BundleId = _appleWalletPassConfig.PassTypeIdentifier,
             CertContent = _appleWalletPassConfig.PushNotificationP8PrivateKey,
             KeyId = _appleWalletPassConfig.PushNotificationP8PrivateKeyId,
             TeamId = _appleWalletPassConfig.TeamIdentifier
         });
         
-        if (!apnsResponse.IsSuccessful)
+        if (!apnsResponses.Any(ar => ar.IsSuccessful))
         {
-            throw new BusinessException($"Cant send push notification by apple APNs with new data. ErrorInfo: {apnsResponse.Reason} ");
+            throw new BusinessException($"Cant send push notification by apple APNs with new data. ErrorInfo: {string.Join("\n\r", apnsResponses.Where(ar => !ar.IsSuccessful).Select(ar => ar.Reason))}");
         }
     }
 }

@@ -2,6 +2,6 @@
 
 public class UpdateAppleWalletPassMessageDto
 {
-    public string PushToken { get; set; }
+    public string[] DevicesPushToken { get; set; }
     public decimal NewBalance { get; set; }
 }

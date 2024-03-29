@@ -5,6 +5,7 @@ using BL.Configurations;
 using BL.Dtos;
 using BL.Exceptions;
 using BL.Entities;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Passbook.Generator;
@@ -19,6 +20,7 @@ public class AppleWalletPassService(
     IPassRepository passRepository,
     IUnitOfWork unitOfWork,
     IDevicesRepository devicesRepository,
+    ILogger<AppleWalletPassService> logger,
     IPushService<UpdateAppleWalletPassMessageDto> pushService)
     : IPassService
 {
@@ -91,19 +93,23 @@ public class AppleWalletPassService(
         
         await pushService.PushMessage(new UpdateAppleWalletPassMessageDto
         {
-            PushToken = card.AppleWalletPass.PushToken!,
-            NewBalance = card.Participant.Balance
+            NewBalance = card.Participant.Balance,
+            DevicesPushToken = card.AppleWalletPass.AppleDevices.Select(d => d.PushToken).ToArray()
         });
     }
 
     public async Task RegisterPass(RegisteredPassDto passDto)
     {
         var pass = await passRepository.GetPassBySerialNumber(passDto.SerialNumber);
-
-        pass.PushToken = passDto.PushToken;
+        if (pass is null)
+        {
+            throw new BusinessException($"Pass with serial number {passDto.SerialNumber} not found!");
+        }
+        
         pass.AppleDevices.Add(new AppleDevice
         {
-            Id = passDto.DeviceId
+            Id = passDto.DeviceId,
+            PushToken = passDto.PushToken
         });
         
         passRepository.UpdatePass(pass);
@@ -114,7 +120,11 @@ public class AppleWalletPassService(
     public async Task UnregisterPass(UnregisterPassDto passDto)
     {
         var pass = await passRepository.GetPassBySerialNumber(passDto.SerialNumber);
-        
+        if (pass is null)
+        {
+            logger.LogInformation("Pass with serialNumber {SerialNumber} was already removed!", passDto.SerialNumber);
+            return;
+        }
         passRepository.Delete(pass);
 
         await unitOfWork.SaveChangesAsync();
