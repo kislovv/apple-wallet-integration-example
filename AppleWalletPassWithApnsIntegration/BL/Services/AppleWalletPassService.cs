@@ -34,7 +34,7 @@ public class AppleWalletPassService(
         }
 
         var partnerPassSpecific = card.Partner.PartnerSpecific;
-        var serialNumber = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{card.Participant.Id}"));
+        var serialNumber = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{card.Participant.Id}_{card.PartnerId}"));
         var balance = card.Participant.Balance;
         
         
