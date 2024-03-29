@@ -48,6 +48,7 @@ public class PassRepository(AppDbContext appContext) : IPassRepository
             .Include(p => p.Card)
                 .ThenInclude(c => c.Partner)
                     .ThenInclude(pr => pr.PartnerSpecific)
+                        .ThenInclude(ps => ps!.AppleAssociatedStoreApps)
             .SingleAsync(p => p.PassId == serialNumber);
     }
 }

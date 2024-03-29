@@ -68,7 +68,7 @@ public class AppleWalletPassService(
         var partnerPassSpecific = pass.Card.Partner.PartnerSpecific;
 
         var result = await GeneratePass(
-            pass.Card.Partner.PartnerSpecific!,
+            partnerPassSpecific!,
             serialNumber,
             pass.Card.UserHashId,
             pass.Card.Participant.Balance);
@@ -183,7 +183,7 @@ public class AppleWalletPassService(
         request.SuppressStripShine = false;
         request.Description = partnerPassSpecific.Description;
         request.OrganizationName = _appleWalletPassConfig.OrganizationName;
-        request.LogoText = _appleWalletPassConfig.OrganizationName;
+        request.LogoText = partnerPassSpecific.Description;
         request.Style = PassStyle.StoreCard;
         request.AssociatedStoreIdentifiers = partnerPassSpecific.AppleAssociatedStoreApps.Select(app => app.Id).ToList();
         
