@@ -30,7 +30,7 @@ public class ApplePushService(IOptionsMonitor<AppleWalletPassConfig> appleWallet
         
         var apnsResponses = await apnsService.SendPushes(pushes, new ApnsJwtOptions
         {
-            BundleId = _appleWalletPassConfig.PassTypeIdentifier,
+            BundleId = _appleWalletPassConfig.ApplicationId,
             CertContent = _appleWalletPassConfig.PushNotificationP8PrivateKey,
             KeyId = _appleWalletPassConfig.PushNotificationP8PrivateKeyId,
             TeamId = _appleWalletPassConfig.TeamIdentifier
